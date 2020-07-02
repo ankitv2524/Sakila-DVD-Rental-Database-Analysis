@@ -1,0 +1,103 @@
+________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+Q1. Here we want to do more insight anylasis about the movies that families are watching.so most of the families considering to watch movies like : Classics, Animation, Children(like cartoons), Family, Comedy and Music.
+
+here we Create a quaries that lists each movie, the film category it is classified in, and the no of times it has been rented out.
+
+Soln:
+
+SELECT
+  film.title film_title,
+  category.name category_name,
+  SUM(rental.rental_id)
+FROM film
+JOIN film_category
+  ON film.film_id = film_category.film_id
+JOIN category
+  ON category.category_id = film_category.category_id
+JOIN rental
+  ON rental.rental_id = film.film_id
+GROUP BY 1,
+         2
+ORDER BY 3 DESC
+
+________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+
+Q2. Here we provide a table with the family-friendly film category, corresponding count of movies within each of the combination of films category for each corresponding rental duration categories and  each of the quartiles, .
+The resulting table should have three columns:
+1.Category
+2.Rental length category
+3.Count
+
+
+Soln:
+
+SELECT
+  category_name,
+  quartiles,
+  COUNT(category_name)
+FROM (SELECT
+  c.name category_name,
+  NTILE(4) OVER (ORDER BY f.rental_duration) AS quartiles
+FROM film f
+JOIN film_category fc
+  ON f.film_id = fc.film_id
+JOIN category c
+  ON c.category_id = fc.category_id
+WHERE c.name IN ('Animation', 'Children', 'Classics', 'Comedy', 'Family', 'Music')) t1
+GROUP BY 1,
+         2
+ORDER BY 1, 2
+
+______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+
+Q3.  Who were the top 10 Paying Customers inside the table in the year 2007 ?
+
+/*This query will returns the top ten customer's who have made the highest payments*/
+
+SELECT DATE_TRUNC('month',pt.payment_date) AS payment_mon,
+       ct.first_name||' '||ct.last_name AS full_name,
+       COUNT(*) AS paycount_permonth,
+       SUM(pt.amount)
+FROM customer ct
+JOIN payment pt
+ON ct.customer_id = pt.customer_id
+WHERE pt.payment_date BETWEEN '2007-01-01' AND '2007-12-31'
+GROUP BY 1,2
+ORDER BY 4 DESC
+LIMIT 10;
+
+
+______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+
+Q4.  Which Film Category is the most and least preferred(Watching) by Families ?
+
+/*This subquery is used to join all the tables which are required
+to return the categories of movies
+ (Animation, Children, Classics, Comedy, Family and Music).*/
+WITH sub1 AS
+(SELECT ct.name AS category_name
+FROM film_category fc
+JOIN category ct
+ON fc.category_id = ct.category_id
+JOIN film fm
+ON fm.film_id = fc.film_id
+JOIN inventory ivt
+ON fm.film_id = ivt.film_id
+JOIN rental rt
+ON ivt.inventory_id = rt.inventory_id
+WHERE ct.name IN('Animation','Children','Classics','Comedy','Family','Music'))
+
+SELECT category_name,COUNT(*) AS rental_count
+FROM sub1
+GROUP BY 1
+ORDER BY 1;
+
+
+_______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+
+
